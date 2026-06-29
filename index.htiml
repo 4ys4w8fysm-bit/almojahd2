@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة قطع الغيار والفواتير</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #eff6ff;
+            --success: #10b981;
+            --dark: #1f2937;
+            --gray-light: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            color: var(--dark);
+            padding-bottom: 120px; /* مساحة للخانة الإجمالية الثابتة في الأسفل */
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #4b5563;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background-color: var(--gray-light);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            background-color: white;
+        }
+
+        /* جدول إضافة القطع داخل الفاتورة */
+        .items-table-container {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+        }
+
+        th {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            text-align: right;
+            padding: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .btn-add-item {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border: 1px dashed var(--primary);
+            padding: 10px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-add-item:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-submit {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        /* الخانة الإجمالية الذكية الثابتة أسفل الصفحة */
+        .sticky-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.08);
+            border-top: 2px solid var(--primary);
+            padding: 15px 20px;
+            z-index: 1000;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-box {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .summary-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .summary-value.grand-total {
+            color: var(--success);
+            font-size: 1.4rem;
+        }
+
+        .badge-tax {
+            font-size: 0.7rem;
+            background-color: #fef3c7;
+            color: #d97706;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>نظام إدارة أسطول المركبات والقطع</h1>
+        <p>إدارة الفواتير والمخزون الذكي لقطع الغيار</p>
+    </header>
+
+    <div class="container">
+        
+        <!-- قسم تفاصيل الفاتورة والمورد -->
+        <div class="card">
+            <div class="card-title">🧾 تفاصيل فاتورة الشراء الصادرة</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>الشركة الموردة (البائع)</label>
+                    <input type="text" id="supplierName" placeholder="مثال: شركة مسقط لقطع الغيار">
+                </div>
+                <div class="form-group">
+                    <label>رقم الفاتورة</label>
+                    <input type="text" id="invoiceNumber" placeholder="123456">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>تاريخ الفاتورة</label>
+                    <input type="date" id="invoiceDate">
+                </div>
+                <div class="form-group">
+                    <label>تخصيص لسيارة (لوحة السيارة المستهلكة)</label>
+                    <select id="carAllocation">
+                        <option value="general">مخزن عام (غير مخصصة لسيارة حالياً)</option>
+                        <option value="car1">لوحة رقم 1111 / أ (هوندا أكورد)</option>
+                        <option value="car2">لوحة رقم 2222 / ب (تويوتا هايلوكس)</option>
+                        <option value="car3">لوحة رقم 3333 / ج (شاحنة إيسوزو)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم القطع المشتراة داخل الفاتورة -->
+        <div class="card">
+            <div class="card-title">🛠️ قطع الغيار المدرجة بالفاتورة</div>
+            <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 10px;">أضف القطع واكتب أسعارها، وسيتم احتساب الإجمالي والضريبة العمانية تلقائياً بالأسفل.</p>
+            
+            <div class="items-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">اسم القطعة / الموديل</th>
+                            <th style="width: 25%;">رقم القطعة (Part No.)</th>
+                            <th style="width: 15%;">الكمية</th>
+                            <th style="width: 20%;">السعر (قبل الضريبة)</th>
+                            <th style="width: 5%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoiceItemsBody">
+                        <tr>
+                            <td><input type="text" class="item-name" placeholder="مثال: فحمات فرامل أمامية" oninput="calculateInvoice()"></td>
+                            <td><input type="text" class="item-part" placeholder="45022-XYZ"></td>
+                            <td><input type="number" class="item-qty" value="1" min="1" oninput="calculateInvoice()"></td>
+                            <td><input type="number" class="item-price" value="0" min="0" step="0.001" oninput="calculateInvoice()"></td>
+                            <td><button class="btn-delete" onclick="deleteRow(this)">✕</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button class="btn-add-item" onclick="addNewRow()">➕ إضافة قطعة أخرى للفاتورة</button>
+            <button class="btn-submit" onclick="saveInvoice()">💾 حفظ الفاتورة في النظام والمخزن</button>
+        </div>
+
+    </div>
+
+    <!-- الخانة الإجمالية الذكية الثابتة أسفل الصفحة (بالريال العماني وضريبة 5%) -->
+    <div class="sticky-footer">
+        <div class="footer-content">
+            <div class="summary-box">
+                <div class="summary-label">المجموع (قبل الضريبة)</div>
+                <div class="summary-value" id="subTotalDisplay">0.000 ر.ع.</div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-label">ضريبة القيمة المضافة <span class="badge-tax">5%</span></div>
+                <div class="summary-value" id="taxDisplay">0.000 ر.ع.</div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-label" style="font-weight: 700; color: var(--primary);">الإجمالي النهائي للفاتورة</div>
+                <div class="summary-value grand-total" id="grandTotalDisplay">0.000 ر.ع.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('invoiceDate').valueAsDate = new Date();
+
+        function addNewRow() {
+            const tbody = document.getElementById('invoiceItemsBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="item-name" placeholder="اسم القطعة" oninput="calculateInvoice()"></td>
+                <td><input type="text" class="item-part" placeholder="رقم القطعة"></td>
+                <td><input type="number" class="item-qty" value="1" min="1" oninput="calculateInvoice()"></td>
+                <td><input type="number" class="item-price" value="0" min="0" step="0.001" oninput="calculateInvoice()"></td>
+                <td><button class="btn-delete" onclick="deleteRow(this)">✕</button></td>
+            `;
+            tbody.appendChild(newRow);
+            calculateInvoice();
+        }
+
+        function deleteRow(button) {
+            const row = button.closest('tr');
+            const tbody = document.getElementById('invoiceItemsBody');
+            if (tbody.rows.length > 1) {
+                row.remove();
+                calculateInvoice();
+            } else {
+                alert('يجب أن تحتوي الفاتورة على قطعة غيار واحدة على الأقل.');
+            }
+        }
+
+        function calculateInvoice() {
+            let subTotal = 0;
+
+            const rows = document.querySelectorAll('#invoiceItemsBody tr');
+            rows.forEach(row => {
+                const qtyInput = row.querySelector('.item-qty');
+                const priceInput = row.querySelector('.item-price');
+
+                const qty = parseFloat(qtyInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+
+                subTotal += (qty * price);
+            });
+
+            // حساب ضريبة القيمة المضافة سلطنة عمان (5%)
+            const taxAmount = subTotal * 0.05;
+            const grandTotal = subTotal + taxAmount;
+
+            // تحديث الأرقام بـ 3 خانات عشرية لتناسب دقة الريال العماني (البيسة)
+            document.getElementById('subTotalDisplay').innerText = subTotal.toFixed(3) + ' ر.ع.';
+            document.getElementById('taxDisplay').innerText = taxAmount.toFixed(3) + ' ر.ع.';
+            document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(3) + ' ر.ع.';
+        }
+
+        function saveInvoice() {
+            const supplier = document.getElementById('supplierName').value;
+            const invoiceNum = document.getElementById('invoiceNumber').value;
+            const total = document.getElementById('grandTotalDisplay').innerText;
+
+            if(!supplier || !invoiceNum) {
+                alert('الرجاء إدخال اسم الشركة الموردة ورقم الفاتورة لتتمكن من الحفظ بشكل سليم.');
+                return;
+            }
+
+            alert(`✅ تم بنجاح حفظ الفاتورة العمانية رقم (${invoiceNum}) لشركة (${supplier}).\nالإجمالي المقيد: ${total}`);
+        }
+    </script>
+</body>
+</html>
